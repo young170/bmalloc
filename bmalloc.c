@@ -1,16 +1,38 @@
 #include <unistd.h>
 #include <stdio.h>
-#include "bmalloc.h" 
+#include "bmalloc.h"
+/* include */
+#include <math>
 
 bm_option bm_mode = BestFit ;
 bm_header bm_list_head = { 0, 0, 0x0 } ;
 
+/* range of memory allocation size, power of 2 */
+#define MAX_POWER 12;
+#define MIN_POWER 4;
+/* size of the header of the memory block, in bytes */
+#define HEADER_SIZE 9;
+
 /* returns the header address of the suspected sibling block of h */
 void * sibling (void * h)
 {
+	int size_of_node = (bm_header *) h->size;
 
-    /*
-    if size is 4096 return NULL, no sibling*/
+	/* size of 4096 has no sibling */
+	if (size_of_node == MAX_POWER)
+		return NULL;
+
+	int index = 1;
+	for (itr = bm_list_head; itr != NULL; itr = itr->next) {
+		if (itr == (bm_header *) h) {
+			if (index % 2 == 0) { // if even index, check left side
+
+			}
+			else { // if odd index, check right side
+
+			}
+		}
+	}
 
     /*
     start with 1
@@ -54,6 +76,19 @@ void * sibling (void * h)
 
 int fitting (size_t s) 
 {
+	/* if size is invalid, return -1 */
+	if (s > pow(2, MAX_POWER) || s < pow(2, MIN_POWER))
+		return -1;
+
+	int fitting_size = MIN_POWER;
+	while (fitting_size <= MAX_POWER) {
+		if (s <= pow(2, fitting_size) - HEADER_SIZE) // check if payload is able to fit the request
+			break;
+
+		fitting_size++;
+	}
+
+	return fitting_size;
 	// TODO
 	/*
 	return when one of the of possible sizes is able to contain the argument size
@@ -67,6 +102,13 @@ int fitting (size_t s)
 
 void * bmalloc (size_t s) 
 {
+	/* if size is invalid, return NULL */
+	if (s > pow(2, MAX_POWER) || s < pow(2, MIN_POWER))
+		return NULL;
+
+	int fitting_size = fitting(s);
+
+	
 	// TODO
 	/*
     if size > 2^12 exception
