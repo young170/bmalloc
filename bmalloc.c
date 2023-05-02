@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "bmalloc.h"
 /* include */
+#include <sys/mman.h>
 #include <math>
 
 bm_option bm_mode = BestFit ;
@@ -38,23 +39,7 @@ void * sibling (void * h)
     start with 1
     even, then return [iter1 - 1]
     odd, then return [iter1 + 1]
-    */
 
-
-	// TODO
-	/*
-	check the next node if the size is the same
-	1. get the size of the node
-	2. get the size of the next node
-	3. if they are the same size && continuous index, then they are siblings
-		else not a sibling
-
-	what if the memory is on the left?
-    how to check if they are continuous
-    1. traverse the list, stop when NULL or *h
-    iteration == h
-
-    when node is found:
     if (even node), sibling is the previous one
 
     itr_curr, itr_prev;
@@ -82,22 +67,13 @@ int fitting (size_t s)
 
 	int fitting_size = MIN_POWER;
 	while (fitting_size <= MAX_POWER) {
-		if (s <= pow(2, fitting_size) - HEADER_SIZE) // check if payload is able to fit the request
+		if (s <= pow(2, fitting_size) - HEADER_SIZE) // check if size of payload is able to fit the request
 			break;
 
 		fitting_size++;
 	}
 
 	return fitting_size;
-	// TODO
-	/*
-	return when one of the of possible sizes is able to contain the argument size
-	traversing from the smallest will be easier?
-
-    iterate from smallest (2^4) to largest (2^12).
-
-    if greater then 2^12, return error. (exception)
-	*/
 }
 
 void * bmalloc (size_t s) 
@@ -108,8 +84,14 @@ void * bmalloc (size_t s)
 
 	int fitting_size = fitting(s);
 
-	
-	// TODO
+	for (;;) {
+
+	}
+
+	void *address = mmap();
+	if (address == MAP_FAILED)
+		return NULL;
+		
 	/*
     if size > 2^12 exception
     
@@ -162,13 +144,9 @@ void * brealloc (void * p, size_t s)
 
 void bmconfig (bm_option opt) 
 {
-	// TODO
-	/*
-	assign the opt given to the global mode, bm_mode
-	which is currently set as BEST_FIT as default
-	*/
+	/* assign the to bm_mode, which is currently set as Bestfit as default */
     if (opt != BestFit || opt != FirstFit)
-        // exception
+        return;
     bm_mode = opt;
 }
 
@@ -190,13 +168,24 @@ bmprint ()
 		printf("\n") ;
 	}
 	printf("=================================================\n") ;
+	printf("\n");
+	
+	int all_given_memory = 0;
+	int user_given_memory = 0;
+	int available_memory = 0;
+	int internal_fragmentation = 0;
 
-	// TODO: print out the stat's.
-    /*
-    print out
-	total amount of all given memory,
-	total amount of memory given to the user,
-	total amount of the available memory,
-	total amount of the internal fragmentation
-    */
+	for (itr = bm_list_head.next, i = 0 ; itr != NULL ; itr = itr->next, i++) {
+		/*
+		print out
+		total amount of all given memory,
+		total amount of memory given to the user,
+		total amount of the available memory,
+		total amount of the internal fragmentation
+		*/
+	}
+
+	printf("===================== stats =====================\n") ;
+
+	printf("=================================================\n") ;
 }
