@@ -3,7 +3,6 @@
 #include "bmalloc.h"
 /* include */
 #include <sys/mman.h>
-#include <math>
 
 bm_option bm_mode = BestFit ;
 bm_header bm_list_head = { 0, 0, 0x0 } ;
@@ -14,19 +13,22 @@ bm_header bm_list_head = { 0, 0, 0x0 } ;
 /* size of the header of the memory block, in bytes */
 #define HEADER_SIZE 9;
 
+/* global variable to store the starting address of the heap */
+bm_header *heap_ptr = NULL:
+
 /* returns the header address of the suspected sibling block of h */
 void * sibling (void * h)
 {
-	int size_of_node = (bm_header *) h->size;
+	int size_of_node = ((bm_header *) h)->size;
+    int i;
 
 	/* size of 4096 has no sibling */
 	if (size_of_node == MAX_POWER)
 		return NULL;
 
-	int index = 1;
-	for (itr = bm_list_head; itr != NULL; itr = itr->next) {
+	for (itr = bm_list_head, i = 1; itr != NULL; itr = itr->next, i++) {
 		if (itr == (bm_header *) h) {
-			if (index % 2 == 0) { // if even index, check left side
+			if (i % 2 == 0) { // if even index, check left side
 
 			}
 			else { // if odd index, check right side
@@ -62,12 +64,12 @@ void * sibling (void * h)
 int fitting (size_t s) 
 {
 	/* if size is invalid, return -1 */
-	if (s > pow(2, MAX_POWER) || s < pow(2, MIN_POWER))
+	if (s > (1 << MAX_POWER) || s < (1 << MIN_POWER))
 		return -1;
 
 	int fitting_size = MIN_POWER;
 	while (fitting_size <= MAX_POWER) {
-		if (s <= pow(2, fitting_size) - HEADER_SIZE) // check if size of payload is able to fit the request
+		if (s <= (1 << fitting_size) - HEADER_SIZE) // check if size of payload is able to fit the request
 			break;
 
 		fitting_size++;
@@ -79,7 +81,7 @@ int fitting (size_t s)
 void * bmalloc (size_t s) 
 {
 	/* if size is invalid, return NULL */
-	if (s > pow(2, MAX_POWER) || s < pow(2, MIN_POWER))
+	if (s > (1 << MAX_POWER) || s < (1 << MIN_POWER))
 		return NULL;
 
 	int fitting_size = fitting(s);
