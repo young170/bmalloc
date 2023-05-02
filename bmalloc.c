@@ -3,6 +3,7 @@
 #include "bmalloc.h"
 /* include */
 #include <sys/mman.h>
+#include <math.h>
 
 bm_option bm_mode = BestFit ;
 bm_header bm_list_head = { 0, 0, 0x0 } ;
