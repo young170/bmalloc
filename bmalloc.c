@@ -249,7 +249,7 @@ void bfree (void *p)
     clear_memory(p, header_ptr->size); // clear the memory
 
     /* calculate internal fragmentation */
-    internal_fragmentation -= ;
+    // internal_fragmentation -= ;
 
     bm_header_ptr sibling_ptr = (bm_header_ptr) sibling(header_ptr);
     header_ptr->used = UNUSED; // free the memory
