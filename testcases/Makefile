@@ -1,5 +1,6 @@
-all: bmalloc.h bmalloc.c test_freeall.c
-	gcc -o test_freeall test_freeall.c bmalloc.c -I../
+all: ../bmalloc.h ../bmalloc.c test_freeall.c test_struct.c
+	gcc -o test_freeall test_freeall.c ../bmalloc.c -I../
+	gcc -o test_struct test_struct.c ../bmalloc.c -I../ -fpack-struct
 
 clean:
-	rm -rf test1 test2 test3 bmalloc.o
+	rm -rf test_freeall test_struct bmalloc.o
