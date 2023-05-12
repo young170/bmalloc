@@ -20,16 +20,6 @@
 bm_option bm_mode = BestFit ;
 bm_header bm_list_head = { 0, 0, 0x0 } ;
 
-struct _allocation_info {
-    void* block_ptr;
-    size_t requested_size;
-    size_t unused_size;
-    struct _allocation_info* next;
-};
-
-typedef struct _allocation_info allocation_info;
-allocation_info * allocation_list_head = NULL;
-
 
 
 /* returns the header address of the suspected sibling block of h */
@@ -100,81 +90,6 @@ int fitting (size_t s)
 	return fitting_size;
 }
 
-void *insert_allocation_data(size_t size)
-{
-    allocation_info *data_info = (allocation_info *) malloc(sizeof(allocation_info));
-    data_info->requested_size = size;
-    data_info->unused_size = (1 << fitting(size)) - (size + HEADER_SIZE);
-    data_info->next = NULL;
-    
-    if (allocation_list_head == NULL) {
-        allocation_list_head = data_info;
-    } else {
-        allocation_info *itr;
-        for (itr = allocation_list_head; itr->next != NULL; itr = itr->next);
-        itr->next = data_info;
-    }
-
-    return (void *) data_info;
-}
-
-void remove_allocation_data(void *ptr)
-{
-    allocation_info *prev = NULL;
-    allocation_info *curr = allocation_list_head;
-
-    while (curr != NULL) {
-        if (curr->block_ptr == ptr) {
-            if (prev == NULL) {
-                allocation_list_head = curr->next;
-            } else {
-                prev->next = curr->next;
-            }
-
-            free(curr);
-            break;
-        }
-
-        prev = curr;
-        curr = curr->next;
-    }
-}
-
-int calc_internal_fragmentation()
-{
-    allocation_info *itr;
-    int internal_frag = 0;
-
-    for (itr = allocation_list_head; itr != NULL; itr = itr->next) {
-        internal_frag += itr->unused_size;
-    }
-
-    return internal_frag;
-}
-
-int calc_user_request()
-{
-    allocation_info *itr;
-    int user_request = 0;
-
-    for (itr = allocation_list_head; itr != NULL; itr = itr->next) {
-        user_request += itr->requested_size;
-    }
-
-    return user_request;
-}
-
-void info_print()
-{
-    allocation_info *itr;
-    int i = 0;
-
-    for (itr = allocation_list_head; itr != NULL; itr = itr->next) {
-        printf("%3d:%4d %4d:%p:", i, (int) itr->requested_size, (int) itr->unused_size, ((void *) itr->block_ptr) + sizeof(bm_header)) ;
-		printf("\n") ;
-    }
-}
-
 /* split the block to fit */
 void *split_block (void *h, int s)
 {
@@ -226,9 +141,6 @@ void * bmalloc (size_t s)
 
     int fitting_size = fitting(s);
 
-    /* calculate internal fragmentation */
-    allocation_info *info = insert_allocation_data(s);
-
     /* the first bmalloc call should initialize the heap */
     if (bm_list_head.next == NULL) {
 
@@ -237,7 +149,6 @@ void * bmalloc (size_t s)
 
         bm_header *new_block_ptr = (bm_header *) split_block((void *) header_ptr, fitting_size);
         new_block_ptr->used = USED;
-        info->block_ptr = new_block_ptr;
 
         return ((void *) new_block_ptr) + HEADER_SIZE;
     }
@@ -274,7 +185,6 @@ void * bmalloc (size_t s)
         bm_header *itr;
         for (itr = bm_list_head.next, i = 0 ; itr->next != 0x0 ; itr = itr->next, i++); // iterate till end node
         itr->next = new_block_ptr; // link to new page
-        info->block_ptr = new_block_ptr;
 
         return ((void *) new_block_ptr) + HEADER_SIZE;
     }
@@ -288,7 +198,6 @@ void * bmalloc (size_t s)
     }
 
     new_block_ptr->used = USED;
-    info->block_ptr = new_block_ptr;
     return ((void *) new_block_ptr) + HEADER_SIZE;
 }
 
@@ -320,8 +229,6 @@ void bfree (void *p)
         fprintf(stderr, "bfree() : invalid free of memory\n");
         exit(1);
     }
-
-    remove_allocation_data(p - HEADER_SIZE); // remove allocation data
 
     clear_memory(p, header_ptr->size); // clear the memory
 
@@ -453,23 +360,22 @@ bmprint ()
 	printf("=================================================\n") ;
 	
 	int all_given_memory = 0;
+    int user_given_memory = 0;
 	int available_memory = 0;
 
 	for (itr = bm_list_head.next, i = 0 ; itr != NULL ; itr = itr->next, i++) {
         if (itr->used == UNUSED)
             available_memory += (1 << itr->size);
+        else
+            user_given_memory += (1 << itr->size);
         
         all_given_memory += (1 << itr->size);
 	}
-
-    int internal_fragmentation = calc_internal_fragmentation();
-    int user_given_memory = calc_user_request();
 
 	printf("===================== stats =====================\n") ;
     printf("total given memory: \t\t%d\n",         all_given_memory);
     printf("total given memory to user: \t%d\n",   user_given_memory);
     printf("total available memory: \t%d\n",       available_memory);
-    printf("total internal fragmentation: \t%d\n", internal_fragmentation);
 	printf("=================================================\n") ;
     printf("\n");
 }
