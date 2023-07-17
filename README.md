@@ -1,4 +1,5 @@
-# OS_HW3
+# bmalloc
+bmalloc: buddy heap memory allocator
 
 ### Instructions
 1. build test cases
